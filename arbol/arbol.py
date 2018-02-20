@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 class Nodo:
-    def __init__(self,agente,nivel,objetivo,plan):
+    def __init__(self,agente,nivel,objetivo,plan,disponibles):
          self.agente = agente
          self.nivel = nivel
          self.objetivo = objetivo
          self.plan = plan
          self.hijos = []
          self.costo = calcular_costo(plan)
+         self.disponibles = disponibles
 
     def insertarHijos(self,ns,nivel):
 
@@ -15,7 +16,13 @@ class Nodo:
             assert(self.nivel==0)
             listNodos= []
             for n in ns:
-                nod = Nodo(str(nivel),nivel,str(nivel),n)
+                disp = self.disponibles
+                for r in simbolos(n):
+                    if r not in disp:
+                        return
+                    disp.remove(r)
+
+                nod = Nodo(str(nivel),nivel,str(nivel),n,disp)
                 listNodos.append(nod)
             self.hijos = listNodos
 
@@ -27,7 +34,13 @@ class Nodo:
         if nivel == self.nivel+1:
             listNodos= []
             for n in ns:
-                nod = Nodo(str(nivel),nivel,str(nivel),n)
+                disp = self.disponibles
+                for r in simbolos(n):
+                    if r not in disp:
+                        return
+                    disp.remove(r)
+
+                nod = Nodo(str(nivel),nivel,str(nivel),n,disp)
                 listNodos.append(nod)
             self.hijos= listNodos
 
@@ -46,13 +59,23 @@ class Nodo:
 def calcular_costo(p):
     return 0
 
+def simbolos(xs):
+    return xs.split('^')
 
 
 solu = {'G1':['H^M','O^L'],'G2':['I^A','N'],'G3':['N','F^L'],'G4':['O^C','N']}
 
 #print solu.items()
+todosLosRecursos=[]
+for k in solu:
+    for p in solu[k]:
+        for r in simbolos(p):
+            todosLosRecursos.append(r)
 
-arbol = Nodo("raiz",0,"","")
+todosLosRecursos = list(set(todosLosRecursos))
+
+
+arbol = Nodo("raiz",0,"","",todosLosRecursos)
 
 
 i=1
