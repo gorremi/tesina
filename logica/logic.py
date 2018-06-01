@@ -21,7 +21,7 @@ And a few other functions:
 
     to_cnf           Convert to conjunctive normal form
     unify            Do unification of two FOL sentences
-    diff, simp       Symbolic differentiation and simplification             
+    diff, simp       Symbolic differentiation and simplification
 """
 
 from __future__ import generators
@@ -34,30 +34,30 @@ from utils import *
 class KB:
     """A Knowledge base to which you can tell and ask sentences.
     To create a KB, first subclass this class and implement
-    tell, ask_generator, and retract.  Why ask_generator instead of ask?  
+    tell, ask_generator, and retract.  Why ask_generator instead of ask?
     The book is a bit vague on what ask means --
     For a Propositional Logic KB, ask(P & Q) returns True or False, but for an
     FOL KB, something like ask(Brother(x, y)) might return many substitutions
-    such as {x: Cain, y: Able}, {x: Able, y: Cain}, {x: George, y: Jeb}, etc.  
+    such as {x: Cain, y: Able}, {x: Able, y: Cain}, {x: George, y: Jeb}, etc.
     So ask_generator generates these one at a time, and ask either returns the
     first one or returns False."""
 
     def __init__(self, sentence=None):
         abstract
 
-    def tell(self, sentence): 
+    def tell(self, sentence):
         "Add the sentence to the KB"
         abstract
 
     def ask(self, query):
         """Ask returns a substitution that makes the query true, or
         it returns False. It is implemented in terms of ask_generator."""
-        try: 
+        try:
             return self.ask_generator(query).next()
         except StopIteration:
             return False
 
-    def ask_generator(self, query): 
+    def ask_generator(self, query):
         "Yield all the substitutions that make query true."
         abstract
 
@@ -74,11 +74,11 @@ class PropKB(KB):
         if sentence:
             self.tell(sentence)
 
-    def tell(self, sentence): 
+    def tell(self, sentence):
         "Add the sentence's clauses to the KB"
-        self.clauses.extend(conjuncts(to_cnf(sentence)))        
+        self.clauses.extend(conjuncts(to_cnf(sentence)))
 
-    def ask_generator(self, query): 
+    def ask_generator(self, query):
         "Yield the empty substitution if KB implies query; else False"
         if not tt_entails(Expr('&', *self.clauses), query):
             return
@@ -91,7 +91,7 @@ class PropKB(KB):
                 self.clauses.remove(c)
 
 #______________________________________________________________________________
-    
+
 class KB_Agent(agents.Agent):
     """A generic logical knowledge-based agent. [Fig. 7.1]"""
     def __init__(self, KB):
@@ -104,10 +104,10 @@ class KB_Agent(agents.Agent):
             return action
         self.program = program
 
-    def make_percept_sentence(self, percept, t): 
+    def make_percept_sentence(self, percept, t):
         return(Expr("Percept")(percept, t))
 
-    def make_action_query(self, t): 
+    def make_action_query(self, t):
         return(expr("ShouldDo(action, %d)" % t))
 
     def make_action_sentence(self, action, t):
@@ -134,10 +134,10 @@ class Expr:
         A symbol, representing a function term or FOL proposition
 
     Exprs can be constructed with operator overloading: if x and y are Exprs,
-    then so are x + y and x & y, etc.  Also, if F and x are Exprs, then so is 
-    F(x); it works by overloading the __call__ method of the Expr F.  Note 
-    that in the Expr that is created by F(x), the op is the str 'F', not the 
-    Expr F.   See http://www.python.org/doc/current/ref/specialnames.html 
+    then so are x + y and x & y, etc.  Also, if F and x are Exprs, then so is
+    F(x); it works by overloading the __call__ method of the Expr F.  Note
+    that in the Expr that is created by F(x), the op is the str 'F', not the
+    Expr F.   See http://www.python.org/doc/current/ref/specialnames.html
     to learn more about operator overloading in Python.
 
     WARNING: x == y and x != y are NOT Exprs.  The reason is that we want
@@ -148,7 +148,7 @@ class Expr:
     equivalence) and logical disequality (or XOR).  You have 3 choices:
         (1) Expr('<=>', x, y) and Expr('^', x, y)
             Note that ^ is bitwose XOR in Python (and Java and C++)
-        (2) expr('x <=> y') and expr('x =/= y').  
+        (2) expr('x <=> y') and expr('x =/= y').
             See the doc string for the function expr.
         (3) (x % y) and (x ^ y).
             It is very ugly to have (x % y) mean (x <=> y), but we need
@@ -186,7 +186,7 @@ class Expr:
 
     def __eq__(self, other):
         """x and y are equal iff their ops and args are equal."""
-        return (other is self) or (isinstance(other, Expr) 
+        return (other is self) or (isinstance(other, Expr)
             and self.op == other.op and self.args == other.args)
 
     def __hash__(self):
@@ -213,7 +213,7 @@ class Expr:
     def __pow__(self, other):    return Expr('**', self, other)
     def __xor__(self, other):    return Expr('^',  self, other)
     def __mod__(self, other):    return Expr('<=>',  self, other) ## (x % y)
-    
+
 
 
 def expr(s):
@@ -256,8 +256,8 @@ def is_prop_symbol(s):
 
 
 ## Useful constant Exprs used in examples and code:
-TRUE, FALSE, ZERO, ONE, TWO = map(Expr, ['TRUE', 'FALSE', 0, 1, 2]) 
-A, B, C, F, G, P, Q, x, y, z  = map(Expr, 'ABCFGPQxyz') 
+TRUE, FALSE, ZERO, ONE, TWO = map(Expr, ['TRUE', 'FALSE', 0, 1, 2])
+A, B, C, F, G, P, Q, x, y, z  = map(Expr, 'ABCFGPQxyz')
 
 #______________________________________________________________________________
 
@@ -348,7 +348,7 @@ def pl_true(exp, model={}):
 #______________________________________________________________________________
 
 ## Convert to Conjunctive Normal Form (CNF)
- 
+
 def to_cnf(s):
     """Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...) [p. 215]
@@ -365,7 +365,7 @@ def to_cnf(s):
     s = eliminate_implications(s) # Steps 1, 2 from p. 215
     s = move_not_inwards(s) # Step 3
     return distribute_and_over_or(s) # Step 4
-    
+
 def eliminate_implications(s):
     """Change >>, <<, and <=> into &, |, and ~. That is, return an Expr
     that is equivalent to s, but has only &, |, and ~ as logical operators.
@@ -413,9 +413,9 @@ def distribute_and_over_or(s):
     """
     if s.op == '|':
         s = NaryExpr('|', *s.args)
-        if len(s.args) == 0: 
+        if len(s.args) == 0:
             return FALSE
-        if len(s.args) == 1: 
+        if len(s.args) == 1:
             return distribute_and_over_or(s.args[0])
         conj = find_if((lambda d: d.op == '&'), s.args)
         if not conj:
@@ -458,7 +458,7 @@ def conjuncts(s):
     >>> conjuncts(A | B)
     [(A | B)]
     """
-    if isinstance(s, Expr) and s.op == '&': 
+    if isinstance(s, Expr) and s.op == '&':
         return s.args
     else:
         return [s]
@@ -470,7 +470,7 @@ def disjuncts(s):
     >>> disjuncts(A & B)
     [(A & B)]
     """
-    if isinstance(s, Expr) and s.op == '|': 
+    if isinstance(s, Expr) and s.op == '|':
         return s.args
     else:
         return [s]
@@ -492,11 +492,31 @@ def pl_resolution_BACKUP(KB, alpha):
         for c in new:
             if c not in clauses: clauses.append(c)
 
+
+ #Definicion original de pl_resolution
+def pl_resolution_sin_Arbol(KB, alpha):
+    "Propositional Logic Resolution: say if alpha follows from KB. [Fig. 7.12]"
+    clauses = KB.clauses + conjuncts(to_cnf(~alpha))
+    new = set()
+    while True:
+        n = len(clauses)
+        pairs = [(clauses[i], clauses[j]) for i in range(n) for j in range(i+1, n)]
+        for (ci, cj) in pairs:
+            resolvents = pl_resolve(ci, cj)
+            if FALSE in resolvents: return True
+            new = new.union(set(resolvents))
+        if new.issubset(set(clauses)): return False
+        for c in new:
+            if c not in clauses: clauses.append(c)
+
+
+#Se modifica la definicion de pl_resolucion para incluir el armado del arbol de cancelacion
 def pl_resolution(KB, alpha):
     "Propositional Logic Resolution: say if alpha follows from KB. [Fig. 7.12]"
     clauses = KB.clauses + conjuncts(to_cnf(~alpha))
     new = set()
     arbol_cancelacion=[]
+    i=0 #debug
     for c in clauses:
         arbol_cancelacion.append(("leaf",c,"leaf"))
     while True:
@@ -507,14 +527,16 @@ def pl_resolution(KB, alpha):
             for r in resolvents:
                 if r not in new:
                     arbol_cancelacion.append((ci,r,cj))
-                
-            if FALSE in resolvents: 
+
+
+            if FALSE in resolvents:
                 return (True, arbol_cancelacion)
             new = new.union(set(resolvents))
-        if new.issubset(set(clauses)): 
+        if new.issubset(set(clauses)):
                 return (False, arbol_cancelacion)
         for c in new:
             if c not in clauses: clauses.append(c)
+
 
 
 def pl_resolve(ci, cj):
@@ -526,7 +548,7 @@ def pl_resolve(ci, cj):
     for di in disjuncts(ci):
         for dj in disjuncts(cj):
             if di == ~dj or ~di == dj:
-                dnew = unique(removeall(di, disjuncts(ci)) + 
+                dnew = unique(removeall(di, disjuncts(ci)) +
                               removeall(dj, disjuncts(cj)))
                 clauses.append(NaryExpr('|', *dnew))
     return clauses
@@ -542,7 +564,7 @@ class PropHornKB(PropKB):
         assert op == '>>' or is_prop_symbol(op), "Must be Horn Clause"
         self.clauses.append(sentence)
 
-    def ask_generator(self, query): 
+    def ask_generator(self, query):
         "Yield the empty substitution if KB implies query; else False"
         if not pl_fc_entails(self.clauses, query):
             return
@@ -557,7 +579,7 @@ class PropHornKB(PropKB):
     def clauses_with_premise(self, p):
         """The list of clauses in KB that have p in the premise.
         This could be cached away for O(1) speed, but we'll recompute it."""
-        return [c for c in self.clauses 
+        return [c for c in self.clauses
                 if c.op == '>>' and p in conjuncts(c.args[0])]
 
 def pl_fc_entails(KB, q):
@@ -586,7 +608,7 @@ Fig[7,13] = expr("(B11 <=> (P12 | P21))  &  ~B11")
 
 ## Propositional Logic Forward Chanining example [Fig. 7.15]
 Fig[7,15] = PropHornKB()
-for s in "P>>Q   (L&M)>>P   (B&L)>>M   (A&P)>>L   (A&B)>>L   A   B".split(): 
+for s in "P>>Q   (L&M)>>P   (B&L)>>M   (A&P)>>L   (A&B)>>L   A   B".split():
     Fig[7,15].tell(expr(s))
 
 #______________________________________________________________________________
@@ -607,7 +629,7 @@ def dpll_satisfiable(s):
     clauses = conjuncts(to_cnf(s))
     symbols = prop_symbols(s)
     return dpll(clauses, symbols, {})
- 
+
 def dpll(clauses, symbols, model):
     "See if the clauses are true in a partial model."
     unknown_clauses = [] ## clauses with an unknown truth value
@@ -615,7 +637,7 @@ def dpll(clauses, symbols, model):
         val =  pl_true(c, model)
         if val == False:
             return False
-        if val != True: 
+        if val != True:
             unknown_clauses.append(c)
     if not unknown_clauses:
         return model
@@ -628,7 +650,7 @@ def dpll(clauses, symbols, model):
     P = symbols.pop()
     return (dpll(clauses, symbols, extend(model, P, True)) or
             dpll(clauses, symbols, extend(model, P, False)))
- 
+
 def find_pure_symbol(symbols, unknown_clauses):
     """Find a symbol and its value if it appears only as a positive literal
     (or only as a negative) in clauses.
@@ -658,7 +680,7 @@ def find_unit_clause(clauses, model):
         if num_not_in_model == 1:
             return P, value
     return None, None
-                
+
 
 def literal_symbol(literal):
     """The symbol in this literal (without the negation).
@@ -671,7 +693,7 @@ def literal_symbol(literal):
         return literal.args[0]
     else:
         return literal
-        
+
 
 #______________________________________________________________________________
 # Walk-SAT [Fig. 7.17]
@@ -679,7 +701,7 @@ def literal_symbol(literal):
 def WalkSAT(clauses, p=0.5, max_flips=10000):
     ## model is a random assignment of true/false to the symbols in clauses
     ## See ~/aima1e/print1/manual/knowledge+logic-answers.tex ???
-    model = dict([(s, random.choice([True, False])) 
+    model = dict([(s, random.choice([True, False]))
                  for s in prop_symbols(clauses)])
     for i in range(max_flips):
         satisfied, unsatisfied = [], []
@@ -717,8 +739,8 @@ class PLWumpusAgent(agents.Agent):
                 for [i, j] in fringe(visited):
                     if KB.ask('~P_%d,%d & ~W_%d,%d' % (i, j, i, j)) != False:
                         raise NotImplementedError
-                    KB.ask('~P_%d,%d | ~W_%d,%d' % (i, j, i, j)) != False 
-            if action == None: 
+                    KB.ask('~P_%d,%d | ~W_%d,%d' % (i, j, i, j)) != False
+            if action == None:
                 action = random.choice(['Forward', 'Right', 'Left'])
             return action
 
@@ -790,23 +812,23 @@ def extend(s, var, val):
     s2 = s.copy()
     s2[var] = val
     return s2
-    
+
 def subst(s, x):
     """Substitute the substitution s into the expression x.
     >>> subst({x: 42, y:0}, F(x) + y)
     (F(42) + 0)
     """
-    if isinstance(x, list): 
+    if isinstance(x, list):
         return [subst(s, xi) for xi in x]
-    elif isinstance(x, tuple): 
+    elif isinstance(x, tuple):
         return tuple([subst(s, xi) for xi in x])
-    elif not isinstance(x, Expr): 
+    elif not isinstance(x, Expr):
         return x
-    elif is_var_symbol(x.op): 
+    elif is_var_symbol(x.op):
         return s.get(x, x)
-    else: 
+    else:
         return Expr(x.op, *[subst(s, arg) for arg in x.args])
-        
+
 def fol_fc_ask(KB, alpha):
     """Inefficient forward chaining for first-order logic. [Fig. 9.3]
     KB is an FOLHornKB and alpha must be an atomic sentence."""
@@ -819,16 +841,16 @@ def fol_fc_ask(KB, alpha):
 
 def standardize_apart(sentence, dic):
     """Replace all the variables in sentence with new variables."""
-    if not isinstance(sentence, Expr): 
+    if not isinstance(sentence, Expr):
         return sentence
-    elif is_var_symbol(sentence.op): 
+    elif is_var_symbol(sentence.op):
         if sentence in dic:
             return dic[sentence]
         else:
             standardize_apart.counter += 1
             dic[sentence] = Expr('V_%d' % standardize-apart.counter)
             return dic[sentence]
-    else: 
+    else:
         return Expr(sentence.op, *[standardize-apart(a, dic) for a in sentence.args])
 
 standardize_apart.counter = 0
@@ -874,34 +896,34 @@ def simp(x):
     if not x.args: return x
     args = map(simp, x.args)
     u, op, v = args[0], x.op, args[-1]
-    if op == '+': 
+    if op == '+':
         if v == ZERO: return u
         if u == ZERO: return v
         if u == v: return TWO * u
         if u == -v or v == -u: return ZERO
-    elif op == '-' and len(args) == 1: 
+    elif op == '-' and len(args) == 1:
         if u.op == '-' and len(u.args) == 1: return u.args[0] ## --y ==> y
-    elif op == '-': 
+    elif op == '-':
         if v == ZERO: return u
         if u == ZERO: return -v
         if u == v: return ZERO
         if u == -v or v == -u: return ZERO
-    elif op == '*': 
+    elif op == '*':
         if u == ZERO or v == ZERO: return ZERO
         if u == ONE: return v
         if v == ONE: return u
         if u == v: return u ** 2
-    elif op == '/': 
+    elif op == '/':
         if u == ZERO: return ZERO
         if v == ZERO: return Expr('Undefined')
         if u == v: return ONE
         if u == -v or v == -u: return ZERO
-    elif op == '**': 
+    elif op == '**':
         if u == ZERO: return ZERO
         if v == ZERO: return ONE
         if u == ONE: return ONE
         if v == ONE: return u
-    elif op == 'log': 
+    elif op == 'log':
         if u == ONE: return ZERO
     else: raise ValueError("Unknown op: " + op)
     ## If we fall through to here, we can not simplify further
@@ -909,5 +931,4 @@ def simp(x):
 
 def d(y, x):
     "Differentiate and then simplify."
-    return simp(diff(y, x))    
-
+    return simp(diff(y, x))

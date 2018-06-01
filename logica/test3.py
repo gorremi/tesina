@@ -2,7 +2,11 @@ from logic import *
 
 
 
-recursos = ['A', 'B', 'C','D','E','F','H','I','J','K','L','M','N','O','P','Q','R']
+recursos = ['A', 'B', 'C','D','E','F','H','I','J','K','L','M','N','O','P','Q','R','~A', '~B', '~C','~D','~E','~F','~H','~I','~J','~K','~L','~M','~N','~O','~P','~Q','~R']
+
+recursosSINneg = ['A', 'B', 'C','D','E','F','H','I','J','K','L','M','N','O','P','Q','R']
+
+recursos = recursosSINneg[:]
 
 objetivos = ['G1','G2','G3','G4','G5','G6','G7','G8','G9']
 
@@ -82,11 +86,21 @@ def buscar_laterales(x,xs):
                     return [c]
                 else:
                     return buscar_laterales(l,xs)+buscar_laterales(r,xs)
+        return []
 
 def armar_arbol_ok(xs):
 
+    lista_de_resultado = []
+    #cant_de_sol = xs.count(("leaf",Expr('FALSE'),"leaf"))
+
+    #for i in range(0,cant_de_sol):
+    #    result = buscar_laterales(Expr('FALSE'),xs)
+    #    lista_de_resultado.append(result)
+    #    xs.remove(("leaf",Expr('FALSE'),"leaf"))
+
+    #return lista_de_resultado
     return buscar_laterales(Expr('FALSE'),xs)
-    #print xs
+
 
 
 def es_padre(o,xs):
@@ -98,11 +112,16 @@ def es_padre(o,xs):
 
     return False
 
+def esplan(ex):
+    if ('|' in str(ex)) or ('&' in str(ex)):
+        return True
+    else:
+        return False
 
 def descartar_padres(xs,expre):
         lista_final=[]
         for (l,c,r) in xs:
-            if not es_padre(c,xs) and (str(expre) not in str(c)):
+            if (not es_padre(c,xs) or not esplan(c)) and (str(expre) not in str(c)):
                 #lista_final.append((l,c,r))
                 lista_final.append(c)
 
@@ -120,44 +139,17 @@ def descartar_padres(xs,expre):
 kb = PropKB()
 
 
-debug= False
+debug= True
 
 
 if debug:
     #reglas=["((F&H&A&I))==>G1","((J&N)|(L&I|P))==>G9","((L|A&H)&(R&Q&O))==>G7","((J&I)|(H&C))==>G9","((M&C&H|B))==>O"]
-    reglas=["((L|A&H)&(R&Q&O))==>G7","((M&C&H|B))==>O"]
+    #reglas=["((L|A&H)&(R&Q&O))==>G7","((M&C&H|B))==>O"]
+    reglas = ["((E|K&L&P)|(I|Q|J|N))==>G7","A ==> J","R ==> J"]
 
 for r in reglas:
     kb.tell (expr(r))
 
-
-
-
-
-
-
-#print tt_entails(expr('(((P | Q) ==> R) & Q)'), expr('~R'))
-
-#print tt_entails(P & Q -> R , Q)
-
-
-#print tt_entails(expr('~R & R'), expr('~R'))
-
-
-#print prop_symbols(expr('(((P | Q) ==> R) & Q)'))
-
-#print tt_true(expr("(P >> Q) <=> (~P | Q)"))
-#print tt_true(expr("(P & ~P) ==> TRUE"))
-
-
-
-
-#kb.tell(expr('(((((L & Q) & B) | H) | (((I & D) & K) & N)) >> G7)'))
-#kb.tell(expr('H'))
-#kb.tell(expr(' (T & Y) ==> P & Q & ~L '))
-
-
-#print kb.clauses
 
 setkb = set()
 
@@ -166,10 +158,11 @@ setkb.update(set(kb.clauses))
 
 posee_recursos = []
 for i in range(0,5):
-    posee_recursos.append(recursos[random.randrange(len(recursos))])
+    posee_recursos.append(recursosSINneg[random.randrange(len(recursosSINneg))])
 
 if debug:
-    posee_recursos = ['D','E','R', 'C']
+    #posee_recursos = ['D','E','R', 'C']
+    posee_recursos = ['H', 'O', 'L', 'B', 'N']
 
 
 for r in posee_recursos:
@@ -185,42 +178,50 @@ expresion = expr('G7')
 
 
 print resultado
-if resultado:
-    armar_arbol_ok (arbol)
-else:
-    alternativas = descartar_padres(arbol,expresion)
-    for a in alternativas:
-        kbn = PropKB()
-        kbn.clauses=kb.clauses[:]
-        #tiene = posee_recursos[:]
-        #nuevos=obtener_rec(a)
-        #tiene += nuevos
-        #tiene.append(obtener_rec(a))
-        kbn.tell(to_cnf(expr(~a)))
-        #print tiene
-        #print kbn
-        (res,a2) = pl_resolution(kbn, expresion)
-        print res
-        ret = armar_arbol_ok(a2)
-        if to_cnf(expr(~expresion)) in ret:
-            #for r in ret:
-                #print to_cnf(r)
-            conj = set(map(expr,ret))
-            #conj.difference(kb.clauses)
-            print "conjunto de soluciones:"
-            for c in conj:
-                if c in kb.clauses:
-                    print c
-                    print "   esta"
-                else:
-                    print c
-                    print " no esta"
 
-            print "\n base kb inicial:"
-            for c in kb.clauses:
+while resultado:
+    res = armar_arbol_ok(arbol)
+    print res
+    for r in res:
+        if not(esplan(r)):
+            kb.retract(r)
+    (resultado,arbol) = pl_resolution(kb, expresion)
+
+
+
+alternativas = descartar_padres(arbol,expresion)
+for a in alternativas:
+    kbn = PropKB()
+    kbn.clauses=kb.clauses[:]
+    #tiene = posee_recursos[:]
+    #nuevos=obtener_rec(a)
+    #tiene += nuevos
+    #tiene.append(obtener_rec(a))
+    kbn.tell(to_cnf(expr(~a)))
+    #print tiene
+    #print kbn
+    (res,a2) = pl_resolution(kbn, expresion)
+    print res
+    ret = armar_arbol_ok(a2)
+    if to_cnf(expr(~expresion)) in ret:
+        #for r in ret:
+            #print to_cnf(r)
+        conj = set(map(expr,ret))
+        #conj.difference(kb.clauses)
+        print "conjunto de soluciones:"
+        for c in conj:
+            if c in kb.clauses:
                 print c
+                print "   esta"
+            else:
+                print c
+                print " no esta"
 
-        kbn.retract(to_cnf(expr(~a)))
+        #print "\n base kb inicial:"
+        #for c in kb.clauses:
+            #print c
+
+    kbn.retract(to_cnf(expr(~a)))
 
 
 #print setkb
